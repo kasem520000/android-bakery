@@ -61,6 +61,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.put
 import retrofit2.Response
 
 /**
@@ -69,9 +70,11 @@ import retrofit2.Response
  * تُعاد المحاولة يدويًّا والقرارُ يبقى بيد المستخدم لا طابورَ يخفيه).
  */
 sealed class ActionResult {
-    data class Synced(val messageAr: String) : ActionResult()
-    data class Refused(val messageAr: String) : ActionResult()
-    data class Offline(val messageAr: String) : ActionResult()
+    abstract val messageAr: String
+
+    data class Synced(override val messageAr: String) : ActionResult()
+    data class Refused(override val messageAr: String) : ActionResult()
+    data class Offline(override val messageAr: String) : ActionResult()
 }
 
 /**
@@ -415,11 +418,9 @@ class BakeryRepository(
      * يُرسَلُ الظهورُ في نقطة البيع بتعديلٍ لاحقٍ بنفس المعرّف.
      */
     suspend fun createCatalogItemReturningId(body: JsonObject): String = withContext(Dispatchers.IO) {
-        val response = api.createCatalogItem(body)
-        val created = rawObject<kotlinx.serialization.json.JsonObject>(response)
-        val id = (created["id"] as? kotlinx.serialization.json.JsonPrimitive)?.content
-            ?: throw ApiException(ProblemDto(title = "لم يُرجع الخادمُ معرّف الصنف"), response.code())
-        id
+        val created = rawObject<kotlinx.serialization.json.JsonObject> { api.createCatalogItem(body) }
+        (created["id"] as? kotlinx.serialization.json.JsonPrimitive)?.content
+            ?: throw ApiException(ProblemDto(title = "لم يُرجع الخادمُ معرّف الصنف"), 200)
     }
 
     /** تعديلُ صنف — `PATCH /organization/catalog/items/{id}` (المرحلة 2). */
@@ -520,8 +521,7 @@ class BakeryRepository(
         val body = kotlinx.serialization.json.buildJsonObject {
             put("branchId", branchId)
         }
-        val response = api.openShift(body)
-        rawObject(response)
+        rawObject<kotlinx.serialization.json.JsonObject> { api.openShift(body) }
     }
 
     /** إتمامُ بيعة نقطة البيع — الإيصالُ كما أعاده الخادم (رقمُ الفاتورة لا يُخترع). */
