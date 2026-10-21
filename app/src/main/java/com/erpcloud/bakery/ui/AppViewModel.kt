@@ -64,6 +64,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.put
 import java.io.IOException
 
 /**
@@ -1077,7 +1078,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _uiState.update { it.copy(notifications = it.notifications.copy(loading = true, unreadOnly = unreadOnly, error = null)) }
             try {
-                val page = repo.notifications(unreadOnly)
+                val page = repo.notifications(unreadOnly = unreadOnly)
                 _uiState.update {
                     it.copy(
                         notifications = it.notifications.copy(
