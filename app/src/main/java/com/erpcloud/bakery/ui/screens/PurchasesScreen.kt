@@ -521,7 +521,9 @@ private fun PurchaseInvoiceForm(
     var sending by remember { mutableStateOf(false) }
     // نمطُ السعر: شاملُ الضريبةِ أم قبلَها — كما في محرّر فواتير الويب
     // (وفي التعديل يُقرأ من المسودّة المحفوظة نفسها).
-    var priceIncludesVat by remember { mutableStateOf(edit?.priceIncludesVat ?: false) }
+    // priceIncludesVat ليست حقلًا في PurchaseInvoiceDetailDto بعد — الافتراضيُّ false
+    // حتى تُضافَ إلى الـ DTO (عندها تُقرأ من المسودّة كما خطّط للتعليق أعلاه).
+    var priceIncludesVat by remember { mutableStateOf(false) }
 
     data class PurchaseLine(val itemId: String = "", val itemLabel: String = "", val qty: String = "", val price: String = "")
     val lines = remember {
